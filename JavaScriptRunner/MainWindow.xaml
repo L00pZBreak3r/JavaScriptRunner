@@ -1,0 +1,134 @@
+﻿<Window x:Class="JavaScriptRunner.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xcad="http://schemas.xceed.com/wpf/xaml/avalondock"
+        xmlns:avdock="clr-namespace:JavaScriptRunner.AvalonDock"
+        xmlns:localcontrols="clr-namespace:JavaScriptRunner.Controls"
+        xmlns:localconverters="clr-namespace:JavaScriptRunner.Converters"
+        xmlns:local="clr-namespace:JavaScriptRunner"
+        mc:Ignorable="d"
+        Title="{Binding Path=WindowText, Mode=OneWay}" Height="350" Width="525">
+  <Window.Resources>
+    <xcad:BoolToVisibilityConverter x:Key="mBoolToVisibilityConverter"/>
+    <localconverters:ActiveDocumentConverter x:Key="mActiveDocumentConverter"/>
+  </Window.Resources>
+    <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition/>
+    </Grid.RowDefinitions>
+    <Ribbon x:Name="mRibbonWin" SelectedIndex="0">
+      <Ribbon.ApplicationMenu>
+        <RibbonApplicationMenu KeyTip="F">
+          <RibbonApplicationMenuItem Header="Выход" ImageSource="ApplicationResources/Images/PowerOff.32.png" Click="CloseButton_Click" />
+        </RibbonApplicationMenu>
+      </Ribbon.ApplicationMenu>
+      <RibbonTab Header="Скрипт">
+        <RibbonGroup>
+          <RibbonButton LargeImageSource="ApplicationResources/Images/NewDocument.32.png" SmallImageSource="ApplicationResources/Images/NewDocument.16.png" ToolTip="Новый скрипт" Click="NewFileButton_Click" />
+          <RibbonButton LargeImageSource="ApplicationResources/Images/FileOpen.32.png" SmallImageSource="ApplicationResources/Images/FileOpen.16.png" ToolTip="Открыть скрипт" Click="OpenFileButton_Click" />
+        </RibbonGroup>
+        <RibbonGroup>
+          <RibbonButton LargeImageSource="ApplicationResources/Images/Run.32.png" SmallImageSource="ApplicationResources/Images/Run.16.png" ToolTip="Запуск" IsEnabled="{Binding Path=IsDocumentOpen, Mode=OneWay}" Click="RunButton_Click" />
+          <RibbonButton LargeImageSource="ApplicationResources/Images/Debug.32.png" SmallImageSource="ApplicationResources/Images/Debug.16.png" ToolTip="Отладка" IsEnabled="{Binding Path=IsDocumentOpen, Mode=OneWay}" Click="DebugButton_Click" />
+        </RibbonGroup>
+        <RibbonGroup>
+          <RibbonToggleButton LargeImageSource="ApplicationResources/Images/ShowMessages.32.png" SmallImageSource="ApplicationResources/Images/ShowMessages.16.png" ToolTip="Показать консоль вывода" IsChecked="{Binding Path=ShowOutputWindow}" IsEnabled="{Binding Path=IsDocumentOpen, Mode=OneWay}" />
+          <RibbonButton LargeImageSource="ApplicationResources/Images/OutputWindow.32.png" SmallImageSource="ApplicationResources/Images/OutputWindow.16.png" ToolTip="Очистить консоль вывода" IsEnabled="{Binding Path=IsDocumentOpen, Mode=OneWay}" Click="ClearButton_Click" />
+        </RibbonGroup>
+        <!--<RibbonGroup>
+          <RibbonToggleButton LargeImageSource="ApplicationResources/Images/ShowMessages.32.png" SmallImageSource="ApplicationResources/Images/ShowMessages.16.png" ToolTip="Показать служебные сообщения" IsChecked="{Binding Path=ShowInternalMessages}" IsEnabled="{Binding Path=IsDocumentOpen, Mode=OneWay}" />
+        </RibbonGroup>-->
+        <RibbonGroup>
+          <RibbonToggleButton x:Name="mStatusBarVisibilityButton" LargeImageSource="ApplicationResources/Images/WindowStatusBar.32.png" SmallImageSource="ApplicationResources/Images/WindowStatusBar.16.png" ToolTip="Показать строку статуса" />
+        </RibbonGroup>
+        <RibbonGroup>
+          <RibbonButton LargeImageSource="ApplicationResources/Images/PowerOff.32.png" SmallImageSource="ApplicationResources/Images/PowerOff.16.png" ToolTip="Выход" Click="CloseButton_Click" />
+        </RibbonGroup>
+      </RibbonTab>
+    </Ribbon>
+    <DockPanel Grid.Row="1">
+      <StatusBar DockPanel.Dock="Bottom" Visibility="{Binding Path=IsChecked, ElementName=mStatusBarVisibilityButton, Converter={StaticResource mBoolToVisibilityConverter}, ConverterParameter={x:Static Visibility.Collapsed}}">
+        <StatusBar.ItemsPanel>
+          <ItemsPanelTemplate>
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="200" />
+              </Grid.ColumnDefinitions>
+            </Grid>
+          </ItemsPanelTemplate>
+        </StatusBar.ItemsPanel>
+        <StatusBarItem Grid.Column="0">
+          <TextBlock Text="{Binding Path=ObjectName, Mode=OneWay}" />
+        </StatusBarItem>
+        <Separator Grid.Column="1" />
+        <StatusBarItem Grid.Column="2">
+          <TextBlock Text="{Binding Path=ConnectionDate, Mode=OneWay}" />
+        </StatusBarItem>
+      </StatusBar>
+      <xcad:DockingManager x:Name="mDockManager"
+      DocumentsSource="{Binding Path=OpenDocuments, Mode=OneWay}"
+      AnchorablesSource="{Binding Path=ToolWindows, Mode=OneWay}" 
+      ActiveContent="{Binding Path=ActiveDocument, Mode=TwoWay, Converter={StaticResource mActiveDocumentConverter}}">
+        <xcad:DockingManager.DocumentHeaderTemplate>
+          <DataTemplate>
+            <StackPanel Orientation="Horizontal">
+              <Image Source="{Binding Path=IconSource, Mode=OneWay}" Margin="0, 0, 4, 0" />
+              <TextBlock Text="{Binding Path=Title, Mode=OneWay}" />
+            </StackPanel>
+          </DataTemplate>
+        </xcad:DockingManager.DocumentHeaderTemplate>
+        <xcad:DockingManager.LayoutItemTemplateSelector>
+          <avdock:PanesTemplateSelector>
+            <avdock:PanesTemplateSelector.FileViewTemplate>
+              <DataTemplate>
+                <localcontrols:ScriptFileControl />
+              </DataTemplate>
+            </avdock:PanesTemplateSelector.FileViewTemplate>
+            <avdock:PanesTemplateSelector.ToolViewTemplate>
+              <DataTemplate>
+                <localcontrols:ToolWindowControl />
+              </DataTemplate>
+            </avdock:PanesTemplateSelector.ToolViewTemplate>
+          </avdock:PanesTemplateSelector>
+        </xcad:DockingManager.LayoutItemTemplateSelector>
+        <xcad:DockingManager.LayoutItemContainerStyleSelector>
+          <avdock:PanesStyleSelector>
+            <avdock:PanesStyleSelector.FileStyle>
+              <Style TargetType="{x:Type xcad:LayoutItem}">
+                <Setter Property="Title" Value="{Binding Path=Model.Title, Mode=OneWay}"/>
+                <Setter Property="ToolTip" Value="{Binding Path=Model.FilePath, Mode=OneWay}"/>
+                <Setter Property="CloseCommand" Value="{Binding Path=Model.CloseCommand, Mode=OneWay}"/>
+                <Setter Property="IconSource" Value="ApplicationResources/Images/Document.16.png"/>
+                <Setter Property="ContentId" Value="{Binding Path=Model.ContentId, Mode=OneWay}"/>
+              </Style>
+            </avdock:PanesStyleSelector.FileStyle>
+            <avdock:PanesStyleSelector.ToolStyle>
+              <Style TargetType="{x:Type xcad:LayoutAnchorableItem}">
+                <Setter Property="Title" Value="{Binding Path=Model.Title, Mode=OneWay}"/>
+                <Setter Property="IconSource" Value="ApplicationResources/Images/OutputWindow.16.png"/>
+                <Setter Property="Visibility" Value="{Binding Path=Model.IsVisible, Mode=TwoWay, Converter={StaticResource mBoolToVisibilityConverter}, ConverterParameter={x:Static Visibility.Hidden}}"/>
+                <Setter Property="ContentId" Value="{Binding Path=Model.ContentId, Mode=OneWay}"/>
+                <Setter Property="IsSelected" Value="{Binding Path=Model.IsSelected, Mode=TwoWay}"/>
+                <Setter Property="IsActive" Value="{Binding Path=Model.IsActive, Mode=TwoWay}"/>
+              </Style>
+            </avdock:PanesStyleSelector.ToolStyle>
+          </avdock:PanesStyleSelector>
+        </xcad:DockingManager.LayoutItemContainerStyleSelector>
+        <xcad:DockingManager.LayoutUpdateStrategy>
+          <avdock:LayoutInitializer />
+        </xcad:DockingManager.LayoutUpdateStrategy>
+        <xcad:LayoutRoot>
+          <xcad:LayoutPanel Orientation="Horizontal">
+            <xcad:LayoutDocumentPane />
+            <xcad:LayoutAnchorablePane Name="ToolsPane" DockWidth="300" />
+          </xcad:LayoutPanel>
+        </xcad:LayoutRoot>
+      </xcad:DockingManager>
+    </DockPanel>
+  </Grid>
+</Window>
